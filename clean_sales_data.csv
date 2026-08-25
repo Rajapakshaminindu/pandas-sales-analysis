@@ -1,0 +1,10 @@
+order_id,customer_name,product,region,quantity,unit_price,date,total_revenue
+1,Alice,Laptop,North,2.0,800,2025-01-05,1600.0
+2,Bob,Mouse,South,5.0,25,2025-01-06,125.0
+3,Charlie,Keyboard,North,3.0,60,2025-01-07,180.0
+4,Diana,Monitor,East,1.0,300,2025-01-09,300.0
+5,Edward,Laptop,West,1.0,800,2025-01-11,800.0
+6,Fatima,Mouse,East,4.0,25,2025-01-12,100.0
+9,Ivan,Laptop,West,3.0,800,2025-01-18,2400.0
+10,Julia,Mouse,North,6.0,25,2025-01-19,150.0
+12,Laura,Monitor,South,1.0,300,2025-01-23,300.0

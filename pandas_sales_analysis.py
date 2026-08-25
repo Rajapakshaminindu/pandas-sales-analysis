@@ -19,16 +19,21 @@ sales_df = sales_df.dropna(subset=["customer_name", "date", "quantity", "unit_pr
 # Create a revenue column
 sales_df["total_revenue"] = sales_df["quantity"] * sales_df["unit_price"]
 
-# Keep it simple: summarize by product
+# Keep it simple: summarize by product and round revenue to 2 decimals.
 product_summary = (
     sales_df.groupby("product")
     .agg(total_revenue=("total_revenue", "sum"), total_units=("quantity", "sum"))
     .sort_values("total_revenue", ascending=False)
+    .round({"total_revenue": 2, "total_units": 0})
 )
 
-# Region summary
+# Region summary with a clearer output name.
 region_summary = (
-    sales_df.groupby("region")["total_revenue"].sum().sort_values(ascending=False)
+    sales_df.groupby("region")["total_revenue"]
+    .sum()
+    .sort_values(ascending=False)
+    .round(2)
+    .rename("total_revenue")
 )
 
 print("\nCleaned data rows:", len(sales_df))
