@@ -15,6 +15,7 @@ Use a small sales dataset to:
 - `clean_sales_data.csv` - cleaned data
 - `product_summary.csv` - product revenue summary
 - `region_summary.csv` - revenue by region
+- `requirements.txt` - library requirements 
 
 ## Run the project
 ```bash
