@@ -1,6 +1,6 @@
 # Pandas Sales Analysis Project
 
-This is a beginner-friendly pandas project for learning data analysis and creating a small GitHub portfolio project.
+This is a beginner-friendly pandas project for learning data analysis.
 
 ## Project goal
 Use a small sales dataset to:
