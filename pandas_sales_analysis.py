@@ -1,51 +1,92 @@
+"""
+Pandas Sales Analysis Main Runner
+Demonstrates foundational and advanced pandas workflows for data analysis and reporting.
+"""
+
+import argparse
+import sys
+from pathlib import Path
 import pandas as pd
 
-# Load the raw dataset
-sales_df = pd.read_csv("sales_data.csv")
+# Allow running from project root
+sys.path.insert(0, str(Path(__file__).parent))
 
-print("Original rows:", len(sales_df))
-print("\nFirst 5 rows:")
-print(sales_df.head())
-print("\nMissing values:")
-print(sales_df.isnull().sum())
+from src.sales_analyzer import SalesAnalyzer
+from src.visualize import generate_sales_dashboard
 
-# Convert numeric fields to numbers and handle missing values
-sales_df["quantity"] = pd.to_numeric(sales_df["quantity"], errors="coerce")
-sales_df["unit_price"] = pd.to_numeric(sales_df["unit_price"], errors="coerce")
 
-# Remove rows with required information missing
-sales_df = sales_df.dropna(subset=["customer_name", "date", "quantity", "unit_price"]).copy()
+def run_pipeline(
+    input_file: str = "sales_data.csv",
+    output_dir: str = ".",
+    generate_charts: bool = True,
+):
+    """
+    Executes the complete sales data pipeline:
+    1. Loads raw dataset
+    2. Identifies missing and irregular values
+    3. Cleans and transforms numeric columns
+    4. Computes KPIs and aggregates
+    5. Exports CSV summaries
+    6. Generates visual executive dashboard
+    """
+    print(f"=== Starting Sales Analysis Pipeline ===")
+    print(f"Dataset: {input_file}\n")
 
-# Create a revenue column
-sales_df["total_revenue"] = sales_df["quantity"] * sales_df["unit_price"]
+    analyzer = SalesAnalyzer(input_file)
+    raw_df = analyzer.load_data()
 
-# Keep it simple: summarize by product and round revenue to 2 decimals.
-product_summary = (
-    sales_df.groupby("product")
-    .agg(total_revenue=("total_revenue", "sum"), total_units=("quantity", "sum"))
-    .sort_values("total_revenue", ascending=False)
-    .round({"total_revenue": 2, "total_units": 0})
-)
+    print("Original rows:", len(raw_df))
+    print("\nFirst 5 rows:")
+    print(raw_df.head())
+    print("\nMissing values:")
+    print(raw_df.isnull().sum())
 
-# Region summary with a clearer output name.
-region_summary = (
-    sales_df.groupby("region")["total_revenue"]
-    .sum()
-    .sort_values(ascending=False)
-    .round(2)
-    .rename("total_revenue")
-)
+    cleaned_df = analyzer.clean_data(raw_df)
+    kpis = analyzer.get_kpis(cleaned_df)
+    product_summary = analyzer.summarize_by_product(cleaned_df)
+    region_summary = analyzer.summarize_by_region(cleaned_df)
 
-print("\nCleaned data rows:", len(sales_df))
-print("\nTotal revenue:", round(sales_df["total_revenue"].sum(), 2))
-print("\nTop products by revenue:")
-print(product_summary)
-print("\nRevenue by region:")
-print(region_summary)
+    print("\nCleaned data rows:", len(cleaned_df))
+    print(f"\nTotal revenue: ${kpis['total_revenue']:,.2f}")
+    print(f"Average order value: ${kpis['avg_order_value']:,.2f}")
+    print(f"Total units sold: {kpis['total_units']}")
 
-# Save cleaned outputs
-sales_df.to_csv("clean_sales_data.csv", index=False)
-product_summary.to_csv("product_summary.csv")
-region_summary.to_csv("region_summary.csv")
+    print("\nTop products by revenue:")
+    print(product_summary)
 
-print("\nFiles created: clean_sales_data.csv, product_summary.csv, region_summary.csv")
+    print("\nRevenue by region:")
+    print(region_summary)
+
+    clean_path, prod_path, reg_path = analyzer.export_results(
+        output_dir=output_dir,
+        clean_filename="clean_sales_data.csv",
+        product_filename="product_summary.csv",
+        region_filename="region_summary.csv",
+    )
+
+    print(f"\nFiles created: {clean_path.name}, {prod_path.name}, {reg_path.name}")
+
+    if generate_charts:
+        chart_path = Path(output_dir) / "assets" / "sales_dashboard.png"
+        generate_sales_dashboard(cleaned_df, product_summary, region_summary, str(chart_path))
+        print(f"Visual dashboard created: {chart_path}")
+
+    print("\n=== Pipeline Completed Successfully ===")
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Pandas Sales Analysis & Reporting CLI")
+    parser.add_argument("--input", default="sales_data.csv", help="Path to input sales CSV")
+    parser.add_argument("--output-dir", default=".", help="Directory to save generated CSVs and charts")
+    parser.add_argument("--no-charts", action="store_true", help="Skip generating visual dashboard chart")
+
+    args = parser.parse_args()
+    run_pipeline(
+        input_file=args.input,
+        output_dir=args.output_dir,
+        generate_charts=not args.no_charts,
+    )
+
+
+if __name__ == "__main__":
+    main()
